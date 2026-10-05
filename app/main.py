@@ -1,9 +1,9 @@
+from fastapi import FastAPI
 from app.core.config import settings
 
-@app.get("/config-check")
-def config_check():
-    return {
-        "app_name": settings.app_name,
-        "debug": settings.debug,
-        "db_host": settings.database_url.split("@")[-1],  # без пароля
-    }
+app = FastAPI(title=settings.app_name, debug=settings.debug)
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "app": settings.app_name}
