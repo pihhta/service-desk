@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import health
 from app.core.config import settings
-from app.web.routes import auth, admin,agent,client
+from app.web.routes import admin, agent, auth, client
 
 app = FastAPI(title=settings.app_name, debug=settings.debug)
 
