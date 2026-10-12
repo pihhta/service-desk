@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Продукты — Админ{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Продукты</h1>
+    <button class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Добавить продукт
+    </button>
+</div>
+
+<div class="row g-3">
+    {% for p in products %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded
+                                bg-primary bg-opacity-10 text-primary"
+                         style="width:48px;height:48px;">
+                        <i class="bi bi-box-seam fs-4"></i>
+                    </div>
+                    {% if p.status == 'Активен' %}
+                        <span class="badge bg-success">{{ p.status }}</span>
+                    {% else %}
+                        <span class="badge bg-warning">{{ p.status }}</span>
+                    {% endif %}
+                </div>
+
+                <h2 class="h5 mb-1">{{ p.name }}</h2>
+                <p class="text-muted small mb-3">Версия {{ p.version }}</p>
+
+                <div class="row g-2 text-center">
+                    <div class="col-6">
+                        <div class="border rounded p-2">
+                            <div class="text-muted small">Клиентов</div>
+                            <div class="fw-semibold">{{ p.clients }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-2">
+                            <div class="text-muted small">Открытых</div>
+                            <div class="fw-semibold">{{ p.open_tickets }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-0 pt-0">
+                <a href="#" class="btn btn-outline-secondary w-100">Подробнее</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
