@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Вход — Service Desk{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-5 col-xl-4">
+        <div class="card border-0 shadow">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-4 text-center">
+                    <i class="bi bi-headset me-1"></i>Service Desk
+                </h1>
+
+                <form method="post" action="/login">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email"
+                               name="email" required autofocus>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="password"
+                               name="password" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        Войти
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <p class="text-center text-muted small mt-3">
+            Демо: admin@example.com / admin
+        </p>
+    </div>
+</div>
+{% endblock %}
