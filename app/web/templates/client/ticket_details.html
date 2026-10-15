@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Заявка #{{ ticket.id }} — Service Desk{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/client">Дашборд</a></li>
+        <li class="breadcrumb-item"><a href="/client/tickets">Мои заявки</a></li>
+        <li class="breadcrumb-item active">#{{ ticket.id }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-4 gap-2">
+    <div>
+        <h1 class="h3 mb-1">{{ ticket.subject }}</h1>
+        <div class="text-muted small">
+            Заявка #{{ ticket.id }} · создана {{ ticket.created }}
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="badge bg-{{ ticket.status_color }} align-self-center fs-6">
+            {{ ticket.status }}
+        </span>
+        <button class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-x-circle me-1"></i>Закрыть заявку
+        </button>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Основная колонка -->
+    <div class="col-lg-8">
+
+        <!-- Описание -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white">
+                <h2 class="h6 mb-0">Описание</h2>
+            </div>
+            <div class="card-body">
+                <p class="mb-0" style="white-space: pre-line;">{{ ticket.description }}</p>
+            </div>
+        </div>
+
+        <!-- Переписка -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-0">Переписка</h2>
+                <span class="badge bg-secondary">{{ comments|length }}</span>
+            </div>
+            <div class="card-body">
+
+                {% for c in comments %}
+                <div class="d-flex mb-3 {% if not loop.last %}pb-3 border-bottom{% endif %}">
+                    <div class="d-inline-flex align-items-center justify-content-center
+                                rounded-circle me-3 flex-shrink-0
+                                {% if c.is_staff %}bg-primary bg-opacity-10 text-primary{% else %}bg-secondary bg-opacity-10 text-secondary{% endif %}"
+                         style="width:40px;height:40px;">
+                        <i class="bi {% if c.is_staff %}bi-headset{% else %}bi-person{% endif %}"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div>
+                                <span class="fw-semibold">{{ c.author }}</span>
+                                <span class="badge bg-light text-dark ms-1 small">{{ c.role }}</span>
+                            </div>
+                            <span class="text-muted small">{{ c.created }}</span>
+                        </div>
+                        <p class="mb-0">{{ c.text }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+            <div class="card-footer bg-white">
+                <form method="post" action="/client/tickets/{{ ticket.id }}/comments">
+                    <div class="mb-2">
+                        <textarea class="form-control" name="text" rows="3"
+                                  placeholder="Написать сообщение..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <label class="btn btn-sm btn-outline-secondary mb-0">
+                            <i class="bi bi-paperclip me-1"></i>Прикрепить файл
+                            <input type="file" hidden>
+                        </label>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-send me-1"></i>Отправить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Боковая колонка -->
+    <div class="col-lg-4">
+
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white">
+                <h2 class="h6 mb-0">Информация</h2>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-5 text-muted">Приоритет</dt>
+                    <dd class="col-7">
+                        <span class="badge bg-{{ ticket.priority_color }}">
+                            {{ ticket.priority }}
+                        </span>
+                    </dd>
+
+                    <dt class="col-5 text-muted">Категория</dt>
+                    <dd class="col-7">{{ ticket.category }}</dd>
+
+                    <dt class="col-5 text-muted">Продукт</dt>
+                    <dd class="col-7">{{ ticket.product }}</dd>
+
+                    <dt class="col-5 text-muted">Исполнитель</dt>
+                    <dd class="col-7">{{ ticket.assignee }}</dd>
+
+                    <dt class="col-5 text-muted">Создана</dt>
+                    <dd class="col-7">{{ ticket.created }}</dd>
+
+                    <dt class="col-5 text-muted">Обновлена</dt>
+                    <dd class="col-7 mb-0">{{ ticket.updated }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h2 class="h6 mb-0">История</h2>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0 small">
+                    {% for h in history %}
+                    <li class="d-flex mb-2 {% if not loop.last %}pb-2 border-bottom{% endif %}">
+                        <i class="bi bi-clock-history text-muted me-2 mt-1"></i>
+                        <div>
+                            <div>{{ h.action }}</div>
+                            <div class="text-muted">
+                                {{ h.author }} · {{ h.created }}
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
