@@ -5,7 +5,7 @@
 {% block content %}
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb mb-0">
-        <li class="breadcrumb-item"><a href="/agent">Дашборд</a></li>
+        <li class="breadcrumb-item"><a href="/agent/">Дашборд</a></li>
         <li class="breadcrumb-item"><a href="/agent/tickets">Тикеты</a></li>
         <li class="breadcrumb-item active">#{{ ticket.id }}</li>
     </ol>
@@ -30,10 +30,8 @@
 </div>
 
 <div class="row g-3">
-    <!-- Основная колонка -->
     <div class="col-lg-8">
 
-        <!-- SLA-предупреждение -->
         <div class="alert alert-{{ ticket.sla_color }} d-flex align-items-center mb-3" role="alert">
             <i class="bi bi-clock-history fs-5 me-2"></i>
             <div>
@@ -42,7 +40,6 @@
             </div>
         </div>
 
-        <!-- Описание -->
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-header bg-white">
                 <h2 class="h6 mb-0">Описание</h2>
@@ -52,7 +49,6 @@
             </div>
         </div>
 
-        <!-- Переписка -->
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h2 class="h6 mb-0">Переписка</h2>
@@ -107,10 +103,8 @@
 
     </div>
 
-    <!-- Боковая колонка -->
     <div class="col-lg-4">
 
-        <!-- Управление тикетом -->
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-header bg-white">
                 <h2 class="h6 mb-0">Управление</h2>
@@ -156,7 +150,6 @@
             </div>
         </div>
 
-        <!-- Информация о тикете -->
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-header bg-white">
                 <h2 class="h6 mb-0">Информация</h2>
@@ -187,7 +180,6 @@
             </div>
         </div>
 
-        <!-- История -->
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white">
                 <h2 class="h6 mb-0">История</h2>

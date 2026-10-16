@@ -8,12 +8,12 @@ router = APIRouter(tags=["agent"])
 MOCK_AGENT = {
     "role": "agent",
     "email": "a.smirnov@sd.ru",
-    "full_name": "Александр Смирнов",
+    "full_name": "Алексей Смирнов",
 }
+
 
 @router.get("/", response_class=HTMLResponse)
 def dashboard(request: Request):
-
     stats = {
         "my_open": 5,
         "unassigned": 8,
@@ -39,7 +39,7 @@ def dashboard(request: Request):
     ]
     unassigned_tickets = [
         {"id": 105, "subject": "Ошибка при выгрузке отчёта",
-         "client": "Ромashka", "priority": "Высокий",
+         "client": "Ромашка", "priority": "Высокий",
          "priority_color": "danger", "created": "5 мин назад"},
         {"id": 104, "subject": "Не открывается раздел настроек",
          "client": "Альфа", "priority": "Средний",
@@ -51,11 +51,64 @@ def dashboard(request: Request):
          "client": "Бета", "priority": "Высокий",
          "priority_color": "danger", "created": "1 ч 20 мин назад"},
     ]
-    return templates.TemplateResponse( 
+    return templates.TemplateResponse(
         "agent/dashboard.html",
         {"request": request, "user": MOCK_AGENT, "stats": stats,
          "my_tickets": my_tickets, "unassigned_tickets": unassigned_tickets},
-        )
+    )
+
+
+@router.get("/tickets", response_class=HTMLResponse)
+def tickets(request: Request):
+    items = [
+        {"id": 105, "subject": "Ошибка при выгрузке отчёта",
+         "client": "Ромашка", "product": "CRM Pro",
+         "status": "Новый", "status_color": "primary",
+         "priority": "Высокий", "priority_color": "danger",
+         "assignee": "—", "sla": "осталось 30 мин",
+         "sla_color": "danger", "created": "5 мин назад"},
+        {"id": 104, "subject": "Не открывается раздел настроек",
+         "client": "Альфа", "product": "CRM Lite",
+         "status": "Новый", "status_color": "primary",
+         "priority": "Средний", "priority_color": "info",
+         "assignee": "—", "sla": "осталось 3 ч",
+         "sla_color": "secondary", "created": "20 мин назад"},
+        {"id": 103, "subject": "Долго грузится главная",
+         "client": "ТехноСофт", "product": "Analytics",
+         "status": "Новый", "status_color": "primary",
+         "priority": "Низкий", "priority_color": "secondary",
+         "assignee": "—", "sla": "осталось 6 ч",
+         "sla_color": "success", "created": "1 ч назад"},
+        {"id": 102, "subject": "Ошибка при сохранении клиента",
+         "client": "Бета", "product": "CRM Pro",
+         "status": "В работе", "status_color": "warning",
+         "priority": "Высокий", "priority_color": "danger",
+         "assignee": "Ольга Иванова", "sla": "через 1 ч",
+         "sla_color": "warning", "created": "1 ч 20 мин назад"},
+        {"id": 101, "subject": "Ошибка авторизации",
+         "client": "Ромашка", "product": "CRM Pro",
+         "status": "В работе", "status_color": "warning",
+         "priority": "Высокий", "priority_color": "danger",
+         "assignee": "Алексей Смирнов", "sla": "через 1 ч 20 мин",
+         "sla_color": "warning", "created": "2 ч назад"},
+        {"id": 95, "subject": "Не приходят уведомления на почту",
+         "client": "Бета", "product": "Billing",
+         "status": "Ожидает ответа", "status_color": "secondary",
+         "priority": "Низкий", "priority_color": "secondary",
+         "assignee": "Алексей Смирнов", "sla": "через 1 день",
+         "sla_color": "success", "created": "2 дня назад"},
+        {"id": 90, "subject": "Забыл пароль", "client": "Альфа",
+         "product": "CRM Lite", "status": "Решён",
+         "status_color": "success", "priority": "Высокий",
+         "priority_color": "danger", "assignee": "Алексей Смирнов",
+         "sla": "в срок", "sla_color": "success",
+         "created": "5 дней назад"},
+    ]
+    return templates.TemplateResponse(
+        "agent/tickets.html",
+        {"request": request, "user": MOCK_AGENT, "tickets": items},
+    )
+
 
 @router.get("/tickets/{ticket_id}", response_class=HTMLResponse)
 def ticket_detail(request: Request, ticket_id: int):
