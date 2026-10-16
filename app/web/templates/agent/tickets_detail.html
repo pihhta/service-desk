@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Тикет #{{ ticket.id }} — Агент{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a href="/agent">Дашборд</a></li>
+        <li class="breadcrumb-item"><a href="/agent/tickets">Тикеты</a></li>
+        <li class="breadcrumb-item active">#{{ ticket.id }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-4 gap-2">
+    <div>
+        <h1 class="h3 mb-1">{{ ticket.subject }}</h1>
+        <div class="text-muted small">
+            #{{ ticket.id }} · {{ ticket.client }} · создан {{ ticket.created }}
+        </div>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        <span class="badge bg-{{ ticket.status_color }} fs-6">{{ ticket.status }}</span>
+        <span class="badge bg-{{ ticket.priority_color }} fs-6">{{ ticket.priority }}</span>
+        {% if ticket.assignee != user.full_name %}
+        <button class="btn btn-primary btn-sm">
+            <i class="bi bi-hand-index-thumb me-1"></i>Взять себе
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Основная колонка -->
+    <div class="col-lg-8">
+
+        <!-- SLA-предупреждение -->
+        <div class="alert alert-{{ ticket.sla_color }} d-flex align-items-center mb-3" role="alert">
+            <i class="bi bi-clock-history fs-5 me-2"></i>
+            <div>
+                <strong>SLA: {{ ticket.sla_status }}</strong>
+                <div class="small">Дедлайн: {{ ticket.sla_deadline }}</div>
+            </div>
+        </div>
+
+        <!-- Описание -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white">
+                <h2 class="h6 mb-0">Описание</h2>
+            </div>
+            <div class="card-body">
+                <p class="mb-0" style="white-space: pre-line;">{{ ticket.description }}</p>
+            </div>
+        </div>
+
+        <!-- Переписка -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h2 class="h6 mb-0">Переписка</h2>
+                <span class="badge bg-secondary">{{ comments|length }}</span>
+            </div>
+            <div class="card-body">
+                {% for c in comments %}
+                <div class="d-flex mb-3 {% if not loop.last %}pb-3 border-bottom{% endif %}">
+                    <div class="d-inline-flex align-items-center justify-content-center
+                                rounded-circle me-3 flex-shrink-0
+                                {% if c.is_staff %}bg-primary bg-opacity-10 text-primary{% else %}bg-secondary bg-opacity-10 text-secondary{% endif %}"
+                         style="width:40px;height:40px;">
+                        <i class="bi {% if c.is_staff %}bi-headset{% else %}bi-person{% endif %}"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div>
+                                <span class="fw-semibold">{{ c.author }}</span>
+                                <span class="badge bg-light text-dark ms-1 small">{{ c.role }}</span>
+                            </div>
+                            <span class="text-muted small">{{ c.created }}</span>
+                        </div>
+                        <p class="mb-0">{{ c.text }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="card-footer bg-white">
+                <form method="post" action="/agent/tickets/{{ ticket.id }}/comments">
+                    <div class="mb-2">
+                        <textarea class="form-control" name="text" rows="3"
+                                  placeholder="Написать ответ клиенту..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="d-flex gap-2">
+                            <label class="btn btn-sm btn-outline-secondary mb-0">
+                                <i class="bi bi-paperclip me-1"></i>Файл
+                                <input type="file" hidden>
+                            </label>
+                            <select class="form-select form-select-sm" style="width:auto;">
+                                <option>Ответ клиенту</option>
+                                <option>Внутренняя заметка</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-send me-1"></i>Отправить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Боковая колонка -->
+    <div class="col-lg-4">
+
+        <!-- Управление тикетом -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white">
+                <h2 class="h6 mb-0">Управление</h2>
+            </div>
+            <div class="card-body">
+                <form method="post" action="/agent/tickets/{{ ticket.id }}/update">
+                    <div class="mb-3">
+                        <label for="status" class="form-label small text-muted">Статус</label>
+                        <select class="form-select" id="status" name="status">
+                            {% for s in statuses %}
+                                <option value="{{ s.value }}"
+                                    {% if s.label == ticket.status %}selected{% endif %}>
+                                    {{ s.label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="priority" class="form-label small text-muted">Приоритет</label>
+                        <select class="form-select" id="priority" name="priority">
+                            <option {% if ticket.priority == 'Низкий' %}selected{% endif %}>Низкий</option>
+                            <option {% if ticket.priority == 'Средний' %}selected{% endif %}>Средний</option>
+                            <option {% if ticket.priority == 'Высокий' %}selected{% endif %}>Высокий</option>
+                            <option {% if ticket.priority == 'Критический' %}selected{% endif %}>Критический</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="assignee" class="form-label small text-muted">Исполнитель</label>
+                        <select class="form-select" id="assignee" name="assignee">
+                            <option>Алексей Смирнов</option>
+                            <option>Ольга Иванова</option>
+                            <option>Дмитрий Волков</option>
+                            <option>— Не назначен —</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-check2 me-1"></i>Сохранить
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Информация о тикете -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white">
+                <h2 class="h6 mb-0">Информация</h2>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-5 text-muted">Категория</dt>
+                    <dd class="col-7">{{ ticket.category }}</dd>
+
+                    <dt class="col-5 text-muted">Продукт</dt>
+                    <dd class="col-7">{{ ticket.product }}</dd>
+
+                    <dt class="col-5 text-muted">Клиент</dt>
+                    <dd class="col-7">{{ ticket.client }}</dd>
+
+                    <dt class="col-5 text-muted">Контакт</dt>
+                    <dd class="col-7">{{ ticket.client_contact }}</dd>
+
+                    <dt class="col-5 text-muted">Email</dt>
+                    <dd class="col-7">
+                        <a href="mailto:{{ ticket.client_email }}"
+                           class="text-decoration-none small">{{ ticket.client_email }}</a>
+                    </dd>
+
+                    <dt class="col-5 text-muted">Обновлён</dt>
+                    <dd class="col-7 mb-0">{{ ticket.updated }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- История -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h2 class="h6 mb-0">История</h2>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0 small">
+                    {% for h in history %}
+                    <li class="d-flex mb-2 {% if not loop.last %}pb-2 border-bottom{% endif %}">
+                        <i class="bi bi-clock-history text-muted me-2 mt-1"></i>
+                        <div>
+                            <div>{{ h.action }}</div>
+                            <div class="text-muted">
+                                {{ h.author }} · {{ h.created }}
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
