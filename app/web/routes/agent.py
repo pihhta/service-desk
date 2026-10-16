@@ -11,7 +11,7 @@ MOCK_AGENT = {
     "full_name": "Александр Смирнов",
 }
 
-@router.get("/agent", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 def dashboard(request: Request):
 
     stats = {
@@ -56,12 +56,6 @@ def dashboard(request: Request):
         {"request": request, "user": MOCK_AGENT, "stats": stats,
          "my_tickets": my_tickets, "unassigned_tickets": unassigned_tickets},
         )
-@router.get("/tickets", response_class=HTMLResponse)
-def tickets(request: Request):
-            return templates.TemplateResponse(
-        "/agent/tickets.html",
-        {"request": request, 'user': MOCK_AGENT, 'tickets': items},  # noqa: F821
-    )
 
 @router.get("/tickets/{ticket_id}", response_class=HTMLResponse)
 def ticket_detail(request: Request, ticket_id: int):
@@ -123,7 +117,7 @@ def ticket_detail(request: Request, ticket_id: int):
     ]
 
     return templates.TemplateResponse(
-        "/agent/ticket_detail.html",
+        "agent/ticket_detail.html",
         {
             "request": request,
             "user": MOCK_AGENT,
