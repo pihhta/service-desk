@@ -19,7 +19,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 from app.db.base import Base
-from app.models import user, ticket  # noqa: F401 — импорт нужен, чтобы Alembic «увидел» модель (пока испортируем только юзера и тикет, остальные добавлю позже)
+from app.models import user, client, product, ticket  # noqa: F401 — импорт нужен, чтобы Alembic «увидел» модель (пока испортируем только юзера и тикет, остальные добавлю позже)
 
 target_metadata = Base.metadata
 
