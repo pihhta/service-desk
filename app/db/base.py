@@ -1,5 +1,5 @@
-from sqlalchemy.orm import DelarativeBase
+from sqlalchemy.orm import DeclarativeBase
 
 
-class Base(DeclarativeBase):  # noqa: F821
+class Base(DeclarativeBase):
     pass
