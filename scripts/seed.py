@@ -1,9 +1,9 @@
-"""Одноразовый скрипт для заполнения БД тестовыми данными.
-
-Запуск: docker compose exec app python scripts/seed.py
-"""
 import os
+import sys
 from datetime import datetime, timedelta
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
