@@ -21,3 +21,27 @@ def login_page(request: Request):
         "auth/login.html",
         {"request": request, "user": None},
     )
+
+@router.post("/login")
+async def login(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    db: AsyncSession = Depends(get_db),
+):
+    user = await authenticate_user(db, email, password)
+    if not user:
+        return templates.TemplateResponse(
+            "auth/login.html",
+            {
+                "request": request,
+                "user": None,
+                "error": "Неверный email или пароль",
+            },
+            status_code=401,
+        )
+    request.session["user_id"] = user.id
+    return RedirectResponse(
+        url=ROLE_HOME.get(user.role, "/login"),
+        status_code=303
+    )
