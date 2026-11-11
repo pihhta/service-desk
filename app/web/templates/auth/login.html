@@ -23,7 +23,9 @@
                         <input type="password" class="form-control" id="password"
                                name="password" required>
                     </div>
-
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% endif %}
                     <button type="submit" class="btn btn-primary w-100">
                         Войти
                     </button>
