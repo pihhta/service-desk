@@ -1,10 +1,10 @@
-from fastapi import APIRouter,Depends, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import require_role
-from app.db.session import get__db
+from app.db.session import get_db
 from app.models.client import Client
 from app.models.product import Product
 from app.models.ticket import Ticket
@@ -13,37 +13,41 @@ from app.web.templates import templates
 
 router = APIRouter(tags=["admin"])
 
+
 @router.get("/", response_class=HTMLResponse)
 async def dashboard(
-   request: Request,
-   db: AsyncSession = Depends(get_db),
-   user: User = Depends(require_role("admin", "manager")),
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin", "manager")),
 ):
     clients_count = await db.scalar(select(func.count()).select_from(Client))
     products_count = await db.scalar(select(func.count()).select_from(Product))
-    agent_count = await db.scalar(select(func.count()).select_form(User).where(User.role == "agent")
+    agents_count = await db.scalar(
+        select(func.count()).select_from(User).where(User.role == "agent")
     )
-    open_tickets = await db.scalar(select(func.count()).select_form(Ticket).where(Ticket.status.in_(["new", "in_progress", "waiting"])
+    open_tickets = await db.scalar(
+        select(func.count()).select_from(Ticket).where(
+            Ticket.status.in_(["new", "in_progress", "waiting"])
+        )
     )
-)
-result = await db.execute(
-    select(Ticket).order_by(Ticket.created_at.desc()).limit(5)
-)
-recent_tickets = result.scalass().all()
+    result = await db.execute(
+        select(Ticket).order_by(Ticket.created_at.desc()).limit(5)
+    )
+    recent_tickets = result.scalars().all()
 
     return templates.TemplateResponse(
         "admin/dashboard.html",
         {
             "request": request,
             "user": user,
-            "stats":{
-                "clients": clientscount or 0,
+            "stats": {
+                "clients": clients_count or 0,
                 "products": products_count or 0,
                 "agents": agents_count or 0,
                 "open_tickets": open_tickets or 0,
             },
             "recent_tickets": recent_tickets,
-            },
+        },
     )
 
 
@@ -52,7 +56,7 @@ async def users(
     request: Request,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role("admin")),
-    ):
+):
     result = await db.execute(select(User).order_by(User.id))
     users_list = result.scalars().all()
     return templates.TemplateResponse(
@@ -81,9 +85,9 @@ async def products(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role("admin", "manager")),
 ):
-    result = await db.execute(select(User).order_by(User.id))
-    users_list = result.scalars().all()
+    result = await db.execute(select(Product).order_by(Product.name))
+    products_list = result.scalars().all()
     return templates.TemplateResponse(
-        "admin/users.html",
-        {"request": request, "user": user, "users": users_list},
+        "admin/products.html",
+        {"request": request, "user": user, "products": products_list},
     )
