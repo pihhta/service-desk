@@ -1,73 +1,49 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter,Depends, Request
 from fastapi.responses import HTMLResponse
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import require_role
+from app.db.session import get__db
+from app.models.client import Client
+from app.models.product import Product
+from app.models.ticket import Ticket
+from app.models.user import User
 from app.web.templates import templates
 
 router = APIRouter(tags=["admin"])
 
-MOCK_ADMIN = {
-    "role": "admin",
-    "email": "admin@example.com",
-    "full_name": "Admin User",
-}
-
-
 @router.get("/", response_class=HTMLResponse)
-def dashboard(request: Request):
-    stats = {
-        "clients": 12,
-        "products": 5,
-        "agents": 8,
-        "open_tickets": 27,
-    }
-    recent_tickets = [
-        {
-            "id": 101,
-            "subject": "Ошибка авторизации",
-            "client": "Ромашка",
-            "status": "Новый",
-            "status_color": "primary",
-            "created": "12.10.2026 09:14",
-        },
-        {
-            "id": 100,
-            "subject": "Не выгружается отчёт",
-            "client": "ТехноСофт",
-            "status": "В работе",
-            "status_color": "warning",
-            "created": "12.10.2026 08:02",
-        },
-        {
-            "id": 99,
-            "subject": "Забыл пароль",
-            "client": "Альфа",
-            "status": "Решён",
-            "status_color": "success",
-            "created": "11.10.2026 17:40",
-        },
-        {
-            "id": 98,
-            "subject": "Медленно работает раздел",
-            "client": "Ромашка",
-            "status": "Ожидает",
-            "status_color": "secondary",
-            "created": "11.10.2026 15:21",
-        },
-        {
-            "id": 97,
-            "subject": "Не приходят уведомления",
-            "client": "Бета",
-            "status": "В работе",
-            "status_color": "warning",
-            "created": "11.10.2026 12:05",
-        },
-    ]
+async def dashboard(
+   request: Request,
+   db: AsyncSession = Depends(get_db),
+   user: User = Depends(require_role("admin", "manager")),
+):
+    clients_count = await db.scalar(select(func.count()).select_from(Client))
+    products_count = await db.scalar(select(func.count()).select_from(Product))
+    agent_count = await db.scalar(select(func.count()).select_form(User).where(User.role == "agent")
+    )
+    open_tickets = await db.scalar(select(func.count()).select_form(Ticket).where(Ticket.status.in_(["new", "in_progress", "waiting"])
+    )
+)
+result = await db.execute(
+    select(Ticket).order_by(Ticket.created_at.desc()).limit(5)
+)
+recent_tickets = result.scalass().all()
+
     return templates.TemplateResponse(
         "admin/dashboard.html",
-        {"request": request,
-        "user": MOCK_ADMIN,
-        "stats":stats,
-        "recent_tickets": recent_tickets},
+        {
+            "request": request,
+            "user": user,
+            "stats":{
+                "clients": clientscount or 0,
+                "products": products_count or 0,
+                "agents": agents_count or 0,
+                "open_tickets": open_tickets or 0,
+            },
+            "recent_tickets": recent_tickets,
+            },
     )
 
 
