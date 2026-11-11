@@ -50,18 +50,7 @@ recent_tickets = result.scalass().all()
 @router.get("/clients", response_class=HTMLResponse)
 def clients(request: Request):
     items = [
-        {"id": 1, "name": "Ромашка", "contact": "Иван Петров",
-         "email": "ivan@romashka.ru", "phone": "+7 900 123-45-67",
-         "products": 3, "open_tickets": 4, "active": True},
-        {"id": 2, "name": "ТехноСофт", "contact": "Мария Сидорова",
-         "email": "m.sidorova@technosoft.ru", "phone": "+7 900 222-33-44",
-         "products": 5, "open_tickets": 2, "active": True},
-        {"id": 3, "name": "Альфа", "contact": "Олег Кузнецов",
-         "email": "o.kuznetsov@alfa.ru", "phone": "+7 900 555-66-77",
-         "products": 1, "open_tickets": 0, "active": False},
-        {"id": 4, "name": "Бета", "contact": "Анна Морозова",
-         "email": "anna@beta.io", "phone": "+7 900 888-99-00",
-         "products": 2, "open_tickets": 1, "active": True},
+   
     ]
     return templates.TemplateResponse(
         "admin/clients.html",
@@ -88,19 +77,18 @@ def products(request: Request):
 
 
 @router.get("/users", response_class=HTMLResponse)
-def users(request: Request):
-    items = [
-        {"id": 1, "full_name": "Алексей Смирнов", "email": "a.smirnov@sd.ru",
-         "role": "agent", "role_label": "Агент L1", "active": True},
-        {"id": 2, "full_name": "Ольга Иванова", "email": "o.ivanova@sd.ru",
-         "role": "agent", "role_label": "Агент L2", "active": True},
-        {"id": 3, "full_name": "Дмитрий Волков", "email": "d.volkov@sd.ru",
-         "role": "manager", "role_label": "Менеджер", "active": True},
-        {"id": 4, "full_name": "Екатерина Новикова", "email": "e.novikova@sd.ru",
-         "role": "agent", "role_label": "Агент L1", "active": False},
-        {"id": 5, "full_name": "Администратор", "email": "admin@example.com",
-         "role": "admin", "role_label": "Администратор", "active": True},
-    ]
+async def users(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin"),
+    ):
+    result = await db.execute(select(User).order_by(User.id))
+    users_list = result.scalars().all()
+    return templates.TemplateResponse(
+        "admin/users.html",
+        {"request": request, "user": user, "users": users_list},
+    )
+    
     return templates.TemplateResponse(
         "admin/users.html",
         {"request": request, "user": MOCK_ADMIN, "users": items},
