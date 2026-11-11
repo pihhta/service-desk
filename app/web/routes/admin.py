@@ -47,40 +47,11 @@ recent_tickets = result.scalass().all()
     )
 
 
-@router.get("/clients", response_class=HTMLResponse)
-def clients(request: Request):
-    items = [
-   
-    ]
-    return templates.TemplateResponse(
-        "admin/clients.html",
-        {"request": request, "user": MOCK_ADMIN, "clients": items},
-    )
-
-
-@router.get("/products", response_class=HTMLResponse)
-def products(request: Request):
-    items = [
-                {"id": 1, "name": "CRM Lite", "version": "2.4.1",
-         "clients": 5, "open_tickets": 3, "status": "Активен"},
-        {"id": 2, "name": "CRM Pro", "version": "3.0.0",
-         "clients": 7, "open_tickets": 6, "status": "Активен"},
-        {"id": 3, "name": "Billing", "version": "1.8.2",
-         "clients": 3, "open_tickets": 1, "status": "Активен"},
-        {"id": 4, "name": "Analytics", "version": "0.9.5",
-         "clients": 2, "open_tickets": 0, "status": "Бета"},
-    ]
-    return templates.TemplateResponse(
-        "admin/products.html",
-        {"request": request, "user": MOCK_ADMIN, "products": items},
-    )
-
-
 @router.get("/users", response_class=HTMLResponse)
 async def users(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role("admin"),
+    user: User = Depends(require_role("admin")),
     ):
     result = await db.execute(select(User).order_by(User.id))
     users_list = result.scalars().all()
@@ -88,8 +59,31 @@ async def users(
         "admin/users.html",
         {"request": request, "user": user, "users": users_list},
     )
-    
+
+
+@router.get("/clients", response_class=HTMLResponse)
+async def clients(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin", "manager")),
+):
+    result = await db.execute(select(Client).order_by(Client.name))
+    clients_list = result.scalars().all()
+    return templates.TemplateResponse(
+        "admin/clients.html",
+        {"request": request, "user": user, "clients": clients_list},
+    )
+
+
+@router.get("/products", response_class=HTMLResponse)
+async def products(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("admin", "manager")),
+):
+    result = await db.execute(select(User).order_by(User.id))
+    users_list = result.scalars().all()
     return templates.TemplateResponse(
         "admin/users.html",
-        {"request": request, "user": MOCK_ADMIN, "users": items},
+        {"request": request, "user": user, "users": users_list},
     )
