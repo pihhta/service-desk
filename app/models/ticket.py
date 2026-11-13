@@ -2,6 +2,9 @@ from datetime import datetime
 
 from sqlalchemy import ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.models.client import Client
+from app.models.product import Product
+from app.models.user import User
 
 from app.db.base import Base
 
