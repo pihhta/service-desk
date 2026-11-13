@@ -22,6 +22,7 @@ class Ticket(Base):
     updated_at: Mapped[datetime] = mapped_column(
         server_default=func.now(), onupdate=func.now()
     )
-
-    author: Mapped["User"] = relationship(foreign_keys=[author_id])  # noqa: F821
-    assignee: Mapped["User | None"] = relationship(foreign_keys=[assignee_id])  # noqa: F821
+    client: Mapped["Client"] = relationship(lazy="joined")  # noqa: F821
+    product: Mapped["Product | None"] = relationship(lazy="joined")  # noqa: F821
+    author: Mapped["User"] = relationship(foreign_keys=[author_id], lazy="joined")  # noqa: F821
+    assignee: Mapped["User | None"] = relationship(foreign_keys=[assignee_id], lazy="joined")  # noqa: F821
