@@ -50,27 +50,19 @@
             <tbody>
                 {% for u in users %}
                 <tr>
-                    <td class="text-muted">{{ u.id }}</td>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <div class="d-inline-flex align-items-center justify-content-center
-                                        rounded-circle bg-secondary bg-opacity-10 text-secondary me-2"
-                                 style="width:36px;height:36px;">
-                                <i class="bi bi-person"></i>
-                            </div>
-                            <span class="fw-semibold">{{ u.full_name }}</span>
-                        </div>
-                    </td>
-                    <td><a href="mailto:{{ u.email }}" class="text-decoration-none">{{ u.email }}</a></td>
-                    <td>
-                        {% if u.role == 'admin' %}
-                            <span class="badge bg-danger">{{ u.role_label }}</span>
-                        {% elif u.role == 'manager' %}
-                            <span class="badge bg-info text-dark">{{ u.role_label }}</span>
-                        {% else %}
-                            <span class="badge bg-primary">{{ u.role_label }}</span>
-                        {% endif %}
-                    </td>
+                    <td>{{ u.id }}</td>
+<td>{{ u.full_name }}</td>
+<td>{{ u.email }}</td>
+<td>
+    {% if u.role == 'admin' %}<span class="badge bg-danger">Администратор</span>
+    {% elif u.role == 'manager' %}<span class="badge bg-info text-dark">Менеджер</span>
+    {% elif u.role == 'agent' %}<span class="badge bg-primary">Агент</span>
+    {% else %}<span class="badge bg-secondary">Клиент</span>{% endif %}
+</td>
+<td>
+    {% if u.is_active %}<span class="badge bg-success">Активен</span>
+    {% else %}<span class="badge bg-secondary">Заблокирован</span>{% endif %}
+</td>
                     <td>
                         {% if u.active %}
                             <span class="badge bg-success">Активен</span>
