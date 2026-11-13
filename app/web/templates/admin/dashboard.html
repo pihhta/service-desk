@@ -73,7 +73,22 @@
         </div>
     </div>
 </div>
-
+{% for t in recent_tickets %}
+<tr>
+    <td class="text-muted">#{{ t.id }}</td>
+    <td>{{ t.subject }}</td>
+    <td>{{ t.client.name if t.client else '—' }}</td>
+    <td>
+        {% if t.status == 'new' %}<span class="badge bg-primary">Новый</span>
+        {% elif t.status == 'in_progress' %}<span class="badge bg-warning">В работе</span>
+        {% elif t.status == 'waiting' %}<span class="badge bg-secondary">Ожидает</span>
+        {% elif t.status == 'resolved' %}<span class="badge bg-success">Решён</span>
+        {% else %}<span class="badge bg-dark">Закрыт</span>{% endif %}
+    </td>
+    <td class="text-muted small">{{ t.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+    <td><a href="/agent/tickets/{{ t.id }}" class="btn btn-sm btn-outline-primary">Открыть</a></td>
+</tr>
+{% endfor %}
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <h2 class="h6 mb-0">Последние тикеты</h2>
