@@ -51,26 +51,17 @@
             <tbody>
                 {% for c in clients %}
                 <tr>
-                    <td class="text-muted">{{ c.id }}</td>
-                    <td class="fw-semibold">{{ c.name }}</td>
-                    <td>{{ c.contact }}</td>
-                    <td><a href="mailto:{{ c.email }}" class="text-decoration-none">{{ c.email }}</a></td>
-                    <td class="text-muted small">{{ c.phone }}</td>
-                    <td class="text-center">{{ c.products }}</td>
-                    <td class="text-center">
-                        {% if c.open_tickets > 0 %}
-                            <span class="badge bg-warning">{{ c.open_tickets }}</span>
-                        {% else %}
-                            <span class="text-muted">0</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if c.active %}
-                            <span class="badge bg-success">Активен</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Неактивен</span>
-                        {% endif %}
-                    </td>
+                   <td>{{ c.id }}</td>
+<td>{{ c.name }}</td>
+<td>{{ c.contact_person or '—' }}</td>
+<td>{{ c.email or '—' }}</td>
+<td>{{ c.phone or '—' }}</td>
+<td>—</td>
+<td>—</td>
+<td>
+    {% if c.is_active %}<span class="badge bg-success">Активен</span>
+    {% else %}<span class="badge bg-secondary">Неактивен</span>{% endif %}
+</td>
                     <td class="text-end">
                         <a href="#" class="btn btn-sm btn-outline-secondary">Профиль</a>
                     </td>
