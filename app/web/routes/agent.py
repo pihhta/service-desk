@@ -58,7 +58,6 @@ async def dashboard(
           "unassigned_tickets": unassigned_tickets},
     )
 
-
 @router.get("/tickets", response_class=HTMLResponse)
 async def tickets(
     request: Request,
@@ -75,65 +74,47 @@ async def tickets(
          "tickets": tickets_list},
     )
 
-
 @router.get("/tickets/{ticket_id}", response_class=HTMLResponse)
-def ticket_detail(request: Request, ticket_id: int):
-    ticket = {
-        "id": ticket_id,
-        "subject": "Ошибка авторизации",
-        "status": "В работе",
-        "status_color": "warning",
-        "priority": "Высокий",
-        "priority_color": "danger",
-        "category": "Доступ",
-        "product": "CRM Pro",
-        "client": "Ромашка",
-        "client_contact": "Иван Петров",
-        "client_email": "ivan@romashka.ru",
-        "created": "12.10.2026 09:14",
-        "updated": "12.10.2026 10:35",
-        "sla_deadline": "12.10.2026 13:14",
-        "sla_status": "Осталось 1 ч 20 мин",
-        "sla_color": "warning",
-        "assignee": "Алексей Смирнов",
-        "description": (
-            "При попытке входа в систему появляется ошибка "
-            "«Неверный логин или пароль», хотя данные введены верно. "
-            "Проблема воспроизводится у всех сотрудников отдела продаж."
-        ),
-    }
+async def ticket_detail(
+    request: Request,
+    ticket_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("agent", "manager")),
+);
+    result = await db.execute(select(Ticket).where(Ticket.id == ticket_id))
+    ticket = result.scalar_one_or_none()
+    if not ticket:
+        return RedirectResponse(
+            "agent/ticket_detail.html",
+            {
+                "request": request,
+                "user": user,
+                "ticket": ticket,
+                "statuses": STATUSES,
+            },
+        )
+@router.post("/tickets/{ticket_id}/update")
+async def update_ticket(
+    ticket_id: int,
+    status: str = Form(...),
+    priority: str = Form(...),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("agent", "manager")),
+);
+    result = await db.execute(select(Ticket).where(Ticket.id == ticket_id))
+    ticket = result.scalar_one_or_none()
+    if not ticket:
+        return RedirectResponse(url="/agenttickets", status_code=303)
 
-    comments = [
-        {"author": "Иван Петров", "role": "Клиент",
-         "created": "12.10.2026 09:14", "is_staff": False,
-         "text": "При попытке входа появляется ошибка. Скриншот прилагаю."},
-        {"author": "Алексей Смирнов", "role": "Агент L1",
-         "created": "12.10.2026 09:32", "is_staff": True,
-         "text": "Здравствуйте! Принял заявку в работу, проверяю логи авторизации."},
-        {"author": "Алексей Смирнов", "role": "Агент L1",
-         "created": "12.10.2026 10:35", "is_staff": True,
-         "text": "Нашли причину: проблема на стороне сервиса аутентификации. "
-                 "Передал задачу инженеру L2."},
-    ]
+        if status in STATUSES:
+            ticket.status = status
+        if priority:
+            ticket.priority = priority
+        if ticket.assignee_id is None:
+            ticket.assignee_id = user.id
 
-    history = [
-        {"created": "12.10.2026 09:14", "author": "Иван Петров",
-         "action": "Создан тикет"},
-        {"created": "12.10.2026 09:32", "author": "Алексей Смирнов",
-         "action": "Статус изменён: Новый → В работе"},
-        {"created": "12.10.2026 09:33", "author": "Алексей Смирнов",
-         "action": "Назначен исполнитель: Алексей Смирнов"},
-        {"created": "12.10.2026 10:35", "author": "Алексей Смирнов",
-         "action": "Добавлен комментарий"},
-    ]
-
-    statuses = [
-        {"value": "new", "label": "Новый"},
-        {"value": "in_progress", "label": "В работе"},
-        {"value": "waiting", "label": "Ожидает ответа"},
-        {"value": "resolved", "label": "Решён"},
-        {"value": "closed", "label": "Закрыт"},
-    ]
+        return RedirectResponse(url=f"/agent/tickets/{ticket_id}", status_code=303)
+        
 
     return templates.TemplateResponse(
         "agent/ticket_detail.html",
