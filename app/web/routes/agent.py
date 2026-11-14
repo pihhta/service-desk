@@ -11,56 +11,51 @@ from app.web.templates import templates
 
 router = APIRouter(tags=["agent"])
 
-MOCK_AGENT = {
-    "role": "agent",
-    "email": "a.smirnov@sd.ru",
-    "full_name": "Алексей Смирнов",
-}
+STATUSES = ["new", "in_progress", "waiting", "resolved", "closed"]
+
 
 
 @router.get("/", response_class=HTMLResponse)
-def dashboard(request: Request):
-    stats = {
-        "my_open": 5,
-        "unassigned": 8,
-        "overdue": 2,
-        "resolved_today": 4,
-    }
-    my_tickets = [
-        {"id": 101, "subject": "Ошибка авторизации", "client": "Ромашка",
-         "status": "В работе", "status_color": "warning",
-         "priority": "Высокий", "priority_color": "danger",
-         "sla": "через 1 ч 20 мин", "sla_color": "warning",
-         "updated": "10 мин назад"},
-        {"id": 98, "subject": "Медленно работает раздел отчётов",
-         "client": "ТехноСофт", "status": "В работе",
-         "status_color": "warning", "priority": "Средний",
-         "priority_color": "info", "sla": "через 4 ч",
-         "sla_color": "secondary", "updated": "35 мин назад"},
-        {"id": 95, "subject": "Не приходят уведомления на почту",
-         "client": "Бета", "status": "Ожидает ответа",
-         "status_color": "secondary", "priority": "Низкий",
-         "priority_color": "secondary", "sla": "через 1 день",
-         "sla_color": "success", "updated": "2 ч назад"},
-    ]
-    unassigned_tickets = [
-        {"id": 105, "subject": "Ошибка при выгрузке отчёта",
-         "client": "Ромашка", "priority": "Высокий",
-         "priority_color": "danger", "created": "5 мин назад"},
-        {"id": 104, "subject": "Не открывается раздел настроек",
-         "client": "Альфа", "priority": "Средний",
-         "priority_color": "info", "created": "20 мин назад"},
-        {"id": 103, "subject": "Долго грузится главная",
-         "client": "ТехноСофт", "priority": "Низкий",
-         "priority_color": "secondary", "created": "1 ч назад"},
-        {"id": 102, "subject": "Ошибка при сохранении клиента",
-         "client": "Бета", "priority": "Высокий",
-         "priority_color": "danger", "created": "1 ч 20 мин назад"},
-    ]
+async def dashboard(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("agent")),
+    ):
+    my_count = await db.scalar(
+        select(func.count()).select_from(Ticket).where(
+            Ticket.assignee_id == user.id,
+            Ticket.status.in_(["new", "in_progress", "waiting"]),
+        )
+    )
+    unassigned_count = await db.scalar(
+        select(func.count()).select_from(Tiket).where(
+            Ticket.assignee_id.is_(None),
+            Ticket.status == "new",
+        )
+    )
+   overdue = 0
+   resolved_today = 0
+
+   result = await db.execute(
+    select(Ticket).where(
+        Ticket.assignee_id == user.id,
+        Ticket.status.in_(["new", "in_progress", "waiting"]),
+    ).order_by(Ticket.sreated_att.desc().limit(5))
+   )
+   unassigned_tickets = result.scalars().all()
+
     return templates.TemplateResponse(
         "agent/dashboard.html",
-        {"request": request, "user": MOCK_AGENT, "stats": stats,
-         "my_tickets": my_tickets, "unassigned_tickets": unassigned_tickets},
+        {"request": request,
+         "user": MOCK_AGENT,
+          "stats": {
+            "my_open": my_count or 0,
+            "unassigned": unassigned_count or 0,
+            "overdue": overdue,
+            "resolved_today": resolved_today,
+          },
+         "my_tickets": my_tickets,
+          "unassigned_tickets": unassigned_tickets},
     )
 
 
