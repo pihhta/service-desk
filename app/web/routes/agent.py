@@ -114,16 +114,17 @@ async def update_ticket(
             ticket.assignee_id = user.id
 
         return RedirectResponse(url=f"/agent/tickets/{ticket_id}", status_code=303)
-        
 
-    return templates.TemplateResponse(
-        "agent/ticket_detail.html",
-        {
-            "request": request,
-            "user": MOCK_AGENT,
-            "ticket": ticket,
-            "comments": comments,
-            "history": history,
-            "statuses": statuses,
-        },
-    )
+@router.post("/tickets/{ticket_id}/take")
+async def take_ticket(
+    ticket_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Dpends(require_role("agent")),
+):
+    result = await db.execute(select(Ticket).where(Ticket.id ==ticket_id))
+    ticket = result.scalar_one_or_none()
+    if ticket and ticket.assignee_id is None:
+        ticket.assignee_id = user.id
+        ticket.status = "in_progress"
+    return RedirectResponse(url=f/agent/tickets/{ticket_id}", status_code=303)
+)
