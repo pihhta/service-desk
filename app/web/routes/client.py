@@ -100,52 +100,18 @@ async def ticket_create(
 
 
 @router.get("/tickets/{ticket_id}", response_class=HTMLResponse)
-def ticket_detail(request: Request, ticket_id: int):
-    ticket = {
-        "id": ticket_id,
-        "subject": "Ошибка авторизации",
-        "status": "В работе",
-        "status_color": "warning",
-        "priority": "Высокий",
-        "priority_color": "danger",
-        "category": "Доступ",
-        "product": "CRM Pro",
-        "created": "12.10.2026 09:14",
-        "updated": "12.10.2026 10:35",
-        "assignee": "Алексей Смирнов",
-        "description": (
-            "При попытке входа в систему появляется ошибка "
-            "«Неверный логин или пароль», хотя данные введены верно. "
-            "Проблема воспроизводится у всех сотрудников отдела продаж."
-        ),
-    }
-    comments = [
-        {"author": "Иван Петров", "role": "Клиент",
-         "created": "12.10.2026 09:14",
-         "text": "При попытке входа появляется ошибка. Скриншот прилагаю.",
-         "is_staff": False},
-        {"author": "Алексей Смирнов", "role": "Агент L1",
-         "created": "12.10.2026 09:32",
-         "text": "Здравствуйте! Принял заявку в работу, проверяю логи авторизации.",
-         "is_staff": True},
-        {"author": "Алексей Смирнов", "role": "Агент L1",
-         "created": "12.10.2026 10:35",
-         "text": "Нашли причину: проблема на стороне сервиса аутентификации. "
-                 "Передал задачу инженеру L2, ориентировочное время решения — 2 часа.",
-         "is_staff": True},
-    ]
-    history = [
-        {"created": "12.10.2026 09:14", "author": "Иван Петров",
-         "action": "Создан тикет"},
-        {"created": "12.10.2026 09:32", "author": "Алексей Смирнов",
-         "action": "Статус изменён: Новый → В работе"},
-        {"created": "12.10.2026 09:33", "author": "Алексей Смирнов",
-         "action": "Назначен исполнитель: Алексей Смирнов"},
-        {"created": "12.10.2026 10:35", "author": "Алексей Смирнов",
-         "action": "Добавлен комментарий"},
-    ]
+async def ticket_detail(
+    ticket_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("client")),
+    ):
+    client = await _get_client_for_user(db, user)
+    result = await db.execute(select(Ticket).where(Ticket.id == ticket_id))
+    ticket = result.scalar_one_or_none()
+    if not ticket or not client or ticket.client_id !=client.id:
+        return RedirectResponse(url="/client/tickets", status_code=303)
     return templates.TemplateResponse(
         "client/ticket_detail.html",
-        {"request": request, "user": MOCK_CLIENT, "ticket": ticket,
-         "comments": comments, "history": history},
+        {"request": request, "user": user, "ticket": ticket},
     )
