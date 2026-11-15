@@ -12,43 +12,27 @@ from app.web.templates import templates
 
 router = APIRouter(tags=["client"])
 
-MOCK_CLIENT = {
-    "role": "client",
-    "email": "ivan@romashka.ru",
-    "full_name": "Иван Петров",
-    "company": "Ромашка",
-}
-
+async def _get_client_for_user(db: AsyncSession, user: User) -> Client | None:
+    result = await db.execute(select(Client).where(Client.email == user.email))
+    return result.scalar_one_or_none()
 
 @router.get("/", response_class=HTMLResponse)
-def dashboard(request: Request):
-    stats = {
-        "open": 3,
-        "in_progress": 2,
-        "resolved": 12,
-        "total": 17,
-    }
-    recent_tickets = [
-        {"id": 101, "subject": "Ошибка авторизации", "status": "Новый",
-         "status_color": "primary", "priority": "Высокий",
-         "priority_color": "danger", "created": "12.10.2026 09:14"},
-        {"id": 98, "subject": "Медленно работает раздел отчётов",
-         "status": "В работе", "status_color": "warning",
-         "priority": "Средний", "priority_color": "info",
-         "created": "11.10.2026 15:21"},
-        {"id": 95, "subject": "Не приходят уведомления на почту",
-         "status": "В работе", "status_color": "warning",
-         "priority": "Низкий", "priority_color": "secondary",
-         "created": "10.10.2026 11:05"},
-        {"id": 90, "subject": "Забыл пароль", "status": "Решён",
-         "status_color": "success", "priority": "Высокий",
-         "priority_color": "danger", "created": "08.10.2026 17:40"},
-    ]
-    return templates.TemplateResponse(
-        "client/dashboard.html",
-        {"request": request, "user": MOCK_CLIENT, "stats": stats,
-         "recent_tickets": recent_tickets},
-    )
+def dashboard(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role("client")),
+):
+    client = await _get_client_for_user(db, user)
+    if not client:
+        return templates.TemplateResponse(
+            "client/dashboard.html",
+            {"request": requiest, "user": user,
+            "stats":{"open":0, "in_ptogress": 0, "total": 0},
+            "recent_tickets":[]},
+        )
+   result = await db.execute(
+    
+   )
 
 
 @router.get("/tickets", response_class=HTMLResponse)
