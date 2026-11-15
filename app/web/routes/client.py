@@ -1,6 +1,13 @@
-from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, Form, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from sqlalchemy.ext.asincio import AsyncSession
 
+from app.core.security import require_role
+from app.db.session import get_db
+from app.models.client import Client
+from app.models.product import Product
+from app.models.ticket import Ticket
+from app.models.user import User
 from app.web.templates import templates
 
 router = APIRouter(tags=["client"])
