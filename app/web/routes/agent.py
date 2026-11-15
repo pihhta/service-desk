@@ -14,13 +14,12 @@ router = APIRouter(tags=["agent"])
 STATUSES = ["new", "in_progress", "waiting", "resolved", "closed"]
 
 
-
 @router.get("/", response_class=HTMLResponse)
 async def dashboard(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role("agent")),
-    ):
+    user: User = Depends(require_role("agent", "manager")),
+):
     my_count = await db.scalar(
         select(func.count()).select_from(Ticket).where(
             Ticket.assignee_id == user.id,
@@ -28,35 +27,52 @@ async def dashboard(
         )
     )
     unassigned_count = await db.scalar(
-        select(func.count()).select_from(Tiket).where(
+        select(func.count()).select_from(Ticket).where(
             Ticket.assignee_id.is_(None),
             Ticket.status == "new",
         )
     )
-   overdue = 0
-   resolved_today = 0
+    overdue = 0
+    resolved_today = 0
 
-   result = await db.execute(
-    select(Ticket).where(
-        Ticket.assignee_id == user.id,
-        Ticket.status.in_(["new", "in_progress", "waiting"]),
-    ).order_by(Ticket.sreated_att.desc().limit(5))
-   )
-   unassigned_tickets = result.scalars().all()
+    result = await db.execute(
+        select(Ticket)
+        .where(
+            Ticket.assignee_id == user.id,
+            Ticket.status.in_(["new", "in_progress", "waiting"]),
+        )
+        .order_by(Ticket.created_at.desc())
+        .limit(5)
+    )
+    my_tickets = result.scalars().all()
+
+    result = await db.execute(
+        select(Ticket)
+        .where(
+            Ticket.assignee_id.is_(None),
+            Ticket.status == "new",
+        )
+        .order_by(Ticket.created_at.desc())
+        .limit(5)
+    )
+    unassigned_tickets = result.scalars().all()
 
     return templates.TemplateResponse(
         "agent/dashboard.html",
-        {"request": request,
-         "user": MOCK_AGENT,
-          "stats": {
-            "my_open": my_count or 0,
-            "unassigned": unassigned_count or 0,
-            "overdue": overdue,
-            "resolved_today": resolved_today,
-          },
-         "my_tickets": my_tickets,
-          "unassigned_tickets": unassigned_tickets},
+        {
+            "request": request,
+            "user": user,
+            "stats": {
+                "my_open": my_count or 0,
+                "unassigned": unassigned_count or 0,
+                "overdue": overdue,
+                "resolved_today": resolved_today,
+            },
+            "my_tickets": my_tickets,
+            "unassigned_tickets": unassigned_tickets,
+        },
     )
+
 
 @router.get("/tickets", response_class=HTMLResponse)
 async def tickets(
@@ -65,14 +81,14 @@ async def tickets(
     user: User = Depends(require_role("agent", "manager")),
 ):
     result = await db.execute(
-        select(Ticket)order_by(Ticket.created_at.desc())
+        select(Ticket).order_by(Ticket.created_at.desc())
     )
-    tickets_list = result.scas=lars().all()
+    tickets_list = result.scalars().all()
     return templates.TemplateResponse(
         "agent/tickets.html",
-        {"request": request, "user": MOCK_AGENT,
-         "tickets": tickets_list},
+        {"request": request, "user": user, "tickets": tickets_list},
     )
+
 
 @router.get("/tickets/{ticket_id}", response_class=HTMLResponse)
 async def ticket_detail(
@@ -80,19 +96,22 @@ async def ticket_detail(
     ticket_id: int,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role("agent", "manager")),
-);
+):
     result = await db.execute(select(Ticket).where(Ticket.id == ticket_id))
     ticket = result.scalar_one_or_none()
     if not ticket:
-        return RedirectResponse(
-            "agent/ticket_detail.html",
-            {
-                "request": request,
-                "user": user,
-                "ticket": ticket,
-                "statuses": STATUSES,
-            },
-        )
+        return RedirectResponse(url="/agent/tickets", status_code=303)
+    return templates.TemplateResponse(
+        "agent/ticket_detail.html",
+        {
+            "request": request,
+            "user": user,
+            "ticket": ticket,
+            "statuses": STATUSES,
+        },
+    )
+
+
 @router.post("/tickets/{ticket_id}/update")
 async def update_ticket(
     ticket_id: int,
@@ -100,31 +119,35 @@ async def update_ticket(
     priority: str = Form(...),
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role("agent", "manager")),
-);
+):
     result = await db.execute(select(Ticket).where(Ticket.id == ticket_id))
     ticket = result.scalar_one_or_none()
     if not ticket:
-        return RedirectResponse(url="/agenttickets", status_code=303)
+        return RedirectResponse(url="/agent/tickets", status_code=303)
 
-        if status in STATUSES:
-            ticket.status = status
-        if priority:
-            ticket.priority = priority
-        if ticket.assignee_id is None:
-            ticket.assignee_id = user.id
+    if status in STATUSES:
+        ticket.status = status
+    if priority:
+        ticket.priority = priority
+    if ticket.assignee_id is None:
+        ticket.assignee_id = user.id
 
-        return RedirectResponse(url=f"/agent/tickets/{ticket_id}", status_code=303)
+    return RedirectResponse(
+        url=f"/agent/tickets/{ticket_id}", status_code=303
+    )
+
 
 @router.post("/tickets/{ticket_id}/take")
 async def take_ticket(
     ticket_id: int,
     db: AsyncSession = Depends(get_db),
-    user: User = Dpends(require_role("agent")),
+    user: User = Depends(require_role("agent")),
 ):
-    result = await db.execute(select(Ticket).where(Ticket.id ==ticket_id))
+    result = await db.execute(select(Ticket).where(Ticket.id == ticket_id))
     ticket = result.scalar_one_or_none()
     if ticket and ticket.assignee_id is None:
         ticket.assignee_id = user.id
         ticket.status = "in_progress"
-    return RedirectResponse(url=f/agent/tickets/{ticket_id}", status_code=303)
-)
+    return RedirectResponse(
+        url=f"/agent/tickets/{ticket_id}", status_code=303
+    )
