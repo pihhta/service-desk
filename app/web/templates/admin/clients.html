@@ -51,19 +51,33 @@
             <tbody>
                 {% for c in clients %}
                 <tr>
-                   <td>{{ c.id }}</td>
-<td>{{ c.name }}</td>
-<td>{{ c.contact_person or '—' }}</td>
-<td>{{ c.email or '—' }}</td>
-<td>{{ c.phone or '—' }}</td>
-<td>—</td>
-<td>—</td>
-<td>
-    {% if c.is_active %}<span class="badge bg-success">Активен</span>
-    {% else %}<span class="badge bg-secondary">Неактивен</span>{% endif %}
-</td>
+                    <td class="text-muted">{{ c.id }}</td>
+                    <td class="fw-semibold">{{ c.name }}</td>
+                    <td>{{ c.contact_person or '—' }}</td>
+                    <td>
+                        {% if c.email %}
+                            <a href="mailto:{{ c.email }}" class="text-decoration-none">{{ c.email }}</a>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td class="text-muted small">{{ c.phone or '—' }}</td>
+                    <td class="text-center text-muted">—</td>
+                    <td class="text-center text-muted">—</td>
+                    <td>
+                        {% if c.is_active %}
+                            <span class="badge bg-success">Активен</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Неактивен</span>
+                        {% endif %}
+                    </td>
                     <td class="text-end">
                         <a href="#" class="btn btn-sm btn-outline-secondary">Профиль</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-4">
+                        <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                        Клиентов пока нет
                     </td>
                 </tr>
                 {% endfor %}
