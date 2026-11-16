@@ -5,13 +5,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import require_role
 from app.db.session import get_db
+from app.models.product import Product
 from app.models.ticket import Ticket
 from app.models.user import User
 from app.web.templates import templates
 
 router = APIRouter(tags=["agent"])
 
-STATUSES = ["new", "in_progress", "waiting", "resolved", "closed"]
+STATUSES = [
+    {"value": "new", "label": "Новый"},
+    {"value": "in_progress", "label": "В работе"},
+    {"value": "waiting", "label": "Ожидает ответа"},
+    {"value": "resolved", "label": "Решён"},
+    {"value": "closed", "label": "Закрыт"},
+]
+
+STATUS_CODES = [s["value"] for s in STATUSES]
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -84,9 +93,18 @@ async def tickets(
         select(Ticket).order_by(Ticket.created_at.desc())
     )
     tickets_list = result.scalars().all()
+
+    products_result = await db.execute(select(Product).order_by(Product.name))
+    products_list = products_result.scalars().all()
+
     return templates.TemplateResponse(
         "agent/tickets.html",
-        {"request": request, "user": user, "tickets": tickets_list},
+        {
+            "request": request,
+            "user": user,
+            "tickets": tickets_list,
+            "products": products_list,
+        },
     )
 
 
@@ -116,7 +134,6 @@ async def ticket_detail(
 async def update_ticket(
     ticket_id: int,
     status: str = Form(...),
-    priority: str = Form(...),
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role("agent", "manager")),
 ):
@@ -125,10 +142,8 @@ async def update_ticket(
     if not ticket:
         return RedirectResponse(url="/agent/tickets", status_code=303)
 
-    if status in STATUSES:
+    if status in STATUS_CODES:
         ticket.status = status
-    if priority:
-        ticket.priority = priority
     if ticket.assignee_id is None:
         ticket.assignee_id = user.id
 
