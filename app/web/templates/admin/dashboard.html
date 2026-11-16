@@ -5,7 +5,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">Дашборд</h1>
-    <span class="text-muted small">Сегодня: 12.10.2026</span>
+    <span class="text-muted small">Сегодня: {{ today }}</span>
 </div>
 
 <div class="row g-3 mb-4">
@@ -73,26 +73,11 @@
         </div>
     </div>
 </div>
-{% for t in recent_tickets %}
-<tr>
-    <td class="text-muted">#{{ t.id }}</td>
-    <td>{{ t.subject }}</td>
-    <td>{{ t.client.name if t.client else '—' }}</td>
-    <td>
-        {% if t.status == 'new' %}<span class="badge bg-primary">Новый</span>
-        {% elif t.status == 'in_progress' %}<span class="badge bg-warning">В работе</span>
-        {% elif t.status == 'waiting' %}<span class="badge bg-secondary">Ожидает</span>
-        {% elif t.status == 'resolved' %}<span class="badge bg-success">Решён</span>
-        {% else %}<span class="badge bg-dark">Закрыт</span>{% endif %}
-    </td>
-    <td class="text-muted small">{{ t.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
-    <td><a href="/agent/tickets/{{ t.id }}" class="btn btn-sm btn-outline-primary">Открыть</a></td>
-</tr>
-{% endfor %}
+
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <h2 class="h6 mb-0">Последние тикеты</h2>
-        <a href="/admin" class="btn btn-sm btn-outline-secondary">Все</a>
+        <a href="/agent/tickets" class="btn btn-sm btn-outline-secondary">Все</a>
     </div>
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
@@ -111,11 +96,27 @@
                 <tr>
                     <td class="text-muted">#{{ t.id }}</td>
                     <td>{{ t.subject }}</td>
-                    <td>{{ t.client }}</td>
-                    <td><span class="badge bg-{{ t.status_color }}">{{ t.status }}</span></td>
-                    <td class="text-muted small">{{ t.created }}</td>
+                    <td>{{ t.client.name if t.client else '—' }}</td>
                     <td>
-                        <a href="#" class="btn btn-sm btn-outline-primary">Открыть</a>
+                        {% if t.status == 'new' %}<span class="badge bg-primary">Новый</span>
+                        {% elif t.status == 'in_progress' %}<span class="badge bg-warning text-dark">В работе</span>
+                        {% elif t.status == 'waiting' %}<span class="badge bg-secondary">Ожидает</span>
+                        {% elif t.status == 'resolved' %}<span class="badge bg-success">Решён</span>
+                        {% else %}<span class="badge bg-dark">Закрыт</span>{% endif %}
+                    </td>
+                    <td class="text-muted small">
+                        {{ t.created_at.strftime('%d.%m.%Y %H:%M') if t.created_at else '—' }}
+                    </td>
+                    <td>
+                        <a href="/agent/tickets/{{ t.id }}"
+                           class="btn btn-sm btn-outline-primary">Открыть</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                        Тикетов пока нет
                     </td>
                 </tr>
                 {% endfor %}

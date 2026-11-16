@@ -6,43 +6,34 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">Тикеты</h1>
     <div class="btn-group">
-        <button class="btn btn-outline-secondary btn-sm active">Все</button>
-        <button class="btn btn-outline-secondary btn-sm">Мои</button>
-        <button class="btn btn-outline-secondary btn-sm">Без исполнителя</button>
+        <a href="/agent/tickets" class="btn btn-outline-secondary btn-sm active">Все</a>
+        <a href="/agent/tickets?filter=my" class="btn btn-outline-secondary btn-sm">Мои</a>
+        <a href="/agent/tickets?filter=unassigned" class="btn btn-outline-secondary btn-sm">Без исполнителя</a>
     </div>
 </div>
 
 <div class="card border-0 shadow-sm mb-3">
     <div class="card-body">
         <div class="row g-2">
-            <div class="col-md-4">
+            <div class="col-md-5">
                 <input type="text" class="form-control" placeholder="Поиск по теме или #">
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <select class="form-select">
                     <option>Все статусы</option>
                     <option>Новый</option>
                     <option>В работе</option>
                     <option>Ожидает</option>
                     <option>Решён</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select class="form-select">
-                    <option>Все приоритеты</option>
-                    <option>Критический</option>
-                    <option>Высокий</option>
-                    <option>Средний</option>
-                    <option>Низкий</option>
+                    <option>Закрыт</option>
                 </select>
             </div>
             <div class="col-md-2">
                 <select class="form-select">
                     <option>Все продукты</option>
-                    <option>CRM Lite</option>
-                    <option>CRM Pro</option>
-                    <option>Billing</option>
-                    <option>Analytics</option>
+                    {% for p in products %}
+                        <option>{{ p.name }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="col-md-2">
@@ -64,9 +55,8 @@
                     <th>Клиент</th>
                     <th>Продукт</th>
                     <th>Статус</th>
-                    <th>Приоритет</th>
                     <th>Исполнитель</th>
-                    <th>SLA</th>
+                    <th>Создан</th>
                     <th style="width:90px;"></th>
                 </tr>
             </thead>
@@ -76,25 +66,44 @@
                     <td class="text-muted">#{{ t.id }}</td>
                     <td>
                         <div class="fw-semibold">{{ t.subject }}</div>
-                        <div class="text-muted small">{{ t.created }}</div>
                     </td>
-                    <td>{{ t.client }}</td>
-                    <td class="text-muted small">{{ t.product }}</td>
-                    <td><span class="badge bg-{{ t.status_color }}">{{ t.status }}</span></td>
-                    <td><span class="badge bg-{{ t.priority_color }}">{{ t.priority }}</span></td>
+                    <td>{{ t.client.name if t.client else '—' }}</td>
+                    <td class="text-muted small">
+                        {{ t.product.name if t.product else '—' }}
+                    </td>
                     <td>
-                        {% if t.assignee == "—" %}
-                            <span class="text-muted small fst-italic">не назначен</span>
+                        {% if t.status == 'new' %}
+                            <span class="badge bg-primary">Новый</span>
+                        {% elif t.status == 'in_progress' %}
+                            <span class="badge bg-warning text-dark">В работе</span>
+                        {% elif t.status == 'waiting' %}
+                            <span class="badge bg-secondary">Ожидает</span>
+                        {% elif t.status == 'resolved' %}
+                            <span class="badge bg-success">Решён</span>
                         {% else %}
-                            <span class="small">{{ t.assignee }}</span>
+                            <span class="badge bg-dark">Закрыт</span>
                         {% endif %}
                     </td>
                     <td>
-                        <span class="badge bg-{{ t.sla_color }}">{{ t.sla }}</span>
+                        {% if t.assignee %}
+                            <span class="small">{{ t.assignee.full_name }}</span>
+                        {% else %}
+                            <span class="text-muted small fst-italic">не назначен</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted small">
+                        {{ t.created_at.strftime('%d.%m.%Y %H:%M') if t.created_at else '—' }}
                     </td>
                     <td>
                         <a href="/agent/tickets/{{ t.id }}"
                            class="btn btn-sm btn-outline-primary">Открыть</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                        Тикетов не найдено
                     </td>
                 </tr>
                 {% endfor %}
@@ -102,11 +111,4 @@
         </table>
     </div>
 </div>
-
-{% if not tickets %}
-<div class="text-center text-muted py-5">
-    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-    <p class="mb-0">Тикетов не найдено</p>
-</div>
-{% endif %}
 {% endblock %}

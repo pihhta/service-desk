@@ -93,7 +93,7 @@
                             <th style="width:70px;">#</th>
                             <th>Тема</th>
                             <th>Клиент</th>
-                            <th>SLA</th>
+                            <th>Создан</th>
                             <th style="width:90px;"></th>
                         </tr>
                     </thead>
@@ -103,19 +103,44 @@
                             <td class="text-muted">#{{ t.id }}</td>
                             <td>
                                 <div class="fw-semibold">{{ t.subject }}</div>
-                                <div class="small">
-                                    <span class="badge bg-{{ t.status_color }}">{{ t.status }}</span>
-                                    <span class="badge bg-{{ t.priority_color }}">{{ t.priority }}</span>
+                                <div class="small mt-1">
+                                    {% if t.status == 'new' %}
+                                        <span class="badge bg-primary">Новый</span>
+                                    {% elif t.status == 'in_progress' %}
+                                        <span class="badge bg-warning text-dark">В работе</span>
+                                    {% elif t.status == 'waiting' %}
+                                        <span class="badge bg-secondary">Ожидает</span>
+                                    {% elif t.status == 'resolved' %}
+                                        <span class="badge bg-success">Решён</span>
+                                    {% else %}
+                                        <span class="badge bg-dark">Закрыт</span>
+                                    {% endif %}
+
+                                    {% if t.priority == 'critical' %}
+                                        <span class="badge bg-danger">Критический</span>
+                                    {% elif t.priority == 'high' %}
+                                        <span class="badge bg-danger bg-opacity-75">Высокий</span>
+                                    {% elif t.priority == 'medium' %}
+                                        <span class="badge bg-info text-dark">Средний</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Низкий</span>
+                                    {% endif %}
                                 </div>
                             </td>
-                            <td>{{ t.client }}</td>
-                            <td>
-                                <span class="badge bg-{{ t.sla_color }}">{{ t.sla }}</span>
-                                <div class="text-muted small">{{ t.updated }}</div>
+                            <td>{{ t.client.name if t.client else '—' }}</td>
+                            <td class="text-muted small">
+                                {{ t.created_at.strftime('%d.%m.%Y %H:%M') if t.created_at else '—' }}
                             </td>
                             <td>
                                 <a href="/agent/tickets/{{ t.id }}"
                                    class="btn btn-sm btn-outline-primary">Открыть</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                                Нет активных тикетов
                             </td>
                         </tr>
                         {% endfor %}
@@ -137,13 +162,28 @@
                    class="list-group-item list-group-item-action">
                     <div class="d-flex justify-content-between align-items-start mb-1">
                         <span class="fw-semibold small">{{ t.subject }}</span>
-                        <span class="badge bg-{{ t.priority_color }}">{{ t.priority }}</span>
+                        {% if t.priority == 'critical' %}
+                            <span class="badge bg-danger">Критический</span>
+                        {% elif t.priority == 'high' %}
+                            <span class="badge bg-danger bg-opacity-75">Высокий</span>
+                        {% elif t.priority == 'medium' %}
+                            <span class="badge bg-info text-dark">Средний</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Низкий</span>
+                        {% endif %}
                     </div>
                     <div class="d-flex justify-content-between small text-muted">
-                        <span>{{ t.client }} · #{{ t.id }}</span>
-                        <span>{{ t.created }}</span>
+                        <span>{{ t.client.name if t.client else '—' }} · #{{ t.id }}</span>
+                        <span>
+                            {{ t.created_at.strftime('%d.%m.%Y %H:%M') if t.created_at else '' }}
+                        </span>
                     </div>
                 </a>
+                {% else %}
+                <div class="list-group-item text-center text-muted py-4">
+                    <i class="bi bi-check2-circle fs-4 d-block mb-2"></i>
+                    Все тикеты распределены
+                </div>
                 {% endfor %}
             </div>
             <div class="card-footer bg-white text-center">
