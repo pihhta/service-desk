@@ -79,6 +79,11 @@ async def clients(
     )
 
 
+from sqlalchemy import func, select
+from app.models.product import Product
+from app.models.ticket import Ticket
+
+
 @router.get("/products", response_class=HTMLResponse)
 async def products(
     request: Request,
@@ -87,7 +92,33 @@ async def products(
 ):
     result = await db.execute(select(Product).order_by(Product.name))
     products_list = result.scalars().all()
+
+    # Уникальные клиенты на продукт
+    clients_result = await db.execute(
+        select(Ticket.product_id, func.count(func.distinct(Ticket.client_id)))
+        .where(Ticket.product_id.isnot(None))
+        .group_by(Ticket.product_id)
+    )
+    clients_by_product = dict(clients_result.all())
+
+    # Открытые тикеты на продукт
+    open_result = await db.execute(
+        select(Ticket.product_id, func.count())
+        .where(
+            Ticket.product_id.isnot(None),
+            Ticket.status.in_(["new", "in_progress", "waiting"]),
+        )
+        .group_by(Ticket.product_id)
+    )
+    open_by_product = dict(open_result.all())
+
     return templates.TemplateResponse(
         "admin/products.html",
-        {"request": request, "user": user, "products": products_list},
+        {
+            "request": request,
+            "user": user,
+            "products": products_list,
+            "clients_by_product": clients_by_product,
+            "open_by_product": open_by_product,
+        },
     )
